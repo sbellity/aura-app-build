@@ -1,0 +1,7 @@
+{
+  "name" : "aura-urlbug",
+  "version" : "0.1.0",
+  "dependencies" : {
+    "aura" : "*"
+  }
+}
