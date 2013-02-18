@@ -1,4 +1,4 @@
-app/components
+app/js/components
 /dist
 .DS_Store
 node_modules
