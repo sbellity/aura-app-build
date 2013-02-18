@@ -23,21 +23,21 @@ module.exports = function (grunt) {
           middleware: function (connect) {
             return [
               lrSnippet,
-              mountFolder(connect, 'dist')
+              mountFolder(connect, 'app')
             ];
           }
         }
       },
     },
     watch: {
-      widgets: {
-        files: ['app/**/*.js'],
-        tasks: ['build']
-      },
+      // widgets: {
+      //   files: ['app/**/*.js'],
+      //   tasks: ['build']
+      // },
       livereload: {
         files: [
-          'dist/index.html',
-          'dist/app.js'
+          'app/index.html',
+          'app/js/widgets/**/*'
         ],
         tasks: ['livereload']
       }

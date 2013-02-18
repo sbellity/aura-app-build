@@ -1,5 +1,9 @@
-require(['aura/aura', 'aura/ext/mediator', 'aura/ext/widgets', 'jquery', 'underscore', 'eventemitter', 'text', './widgets'], function(Aura) {
-  Aura().start({ widgets: 'body' }).then(function() {
-    console.warn("Aura app started !");
-  });
+require(['components/aura/lib/aura'], function(Aura) {
+  Aura({ debug: true })
+    .use('extensions/aura-backbone')
+    .use(function(app) { window.app = app; })
+    .start({ widgets: 'body' })
+    .then(function() {
+      console.warn("Aura app started !");
+    });
 });
