@@ -1,16 +1,22 @@
 /*global module:false*/
 module.exports = function(grunt) {
 
+  // Underscore
+  // ==========
+  var _ = grunt.util._;
+
+  // Package
+  // =======
+  var pkg = grunt.file.readJSON('./package.json');
+
+  // Widgets
+  // =======´
+  var widgets = require('fs').readdirSync('public/js/widgets');
+
   // Project configuration.
   grunt.initConfig({
     // Metadata.
-    pkg: grunt.file.readJSON('package.json'),
-    banner: '/*! <%= pkg.title || pkg.name %> - v<%= pkg.version %> - ' +
-      '<%= grunt.template.today("yyyy-mm-dd") %>\n' +
-      '<%= pkg.homepage ? "* " + pkg.homepage + "\\n" : "" %>' +
-      '* Copyright (c) <%= grunt.template.today("yyyy") %> <%= pkg.author.name %>;' +
-      ' Licensed <%= _.pluck(pkg.licenses, "type").join(", ") %> */\n',
-    // Task configuration.
+    pkg: pkg,
     jshint: {
       options: {
         jshintrc: '.jshintrc'
@@ -38,27 +44,63 @@ module.exports = function(grunt) {
 
     },
     requirejs: {
-      compile: {
+      client: {
         options: {
           dir: 'build/js',
-          appDir: 'public/js',
-          mainConfigFile: 'public/js/config.js',
-          baseUrl: '.',
-          findNestedDependencies: true,
-          modules: [
-             //{ name: 'widgets/hello/main', include: ['widgets/hello/main']}
-             { name: 'app', include: [ 'aura/lib/ext/mediator', 'aura/lib/ext/widgets', 'app', 'extensions/aura-backbone'] },
-
-          ],
+          baseUrl: 'public/js',
           optimize: 'none',
-          removeCombined: false
+          preserveLicenseComments: true,
+          paths: {
+            aura:           'components/aura/lib/',
+            underscore:     'components/underscore/underscore',
+            eventemitter:   'components/eventemitter2/lib/eventemitter2',
+            backbone:       'components/backbone/backbone',
+            handlebars:     'components/handlebars/handlebars',
+            text:           'components/requirejs-text/text'
+          },
+          shim: {
+            backbone: {
+              exports: 'Backbone',
+              deps: ['underscore', 'jquery']
+            },
+            underscore: {
+              exports: '_'
+            },
+            handlebars: {
+              exports: 'Handlebars'
+            }
+          },
+          modules: (function() {
+            // Get auraExtensions
+            var output = [];
+
+            // Include Aura
+            output.push({
+              name: 'app',
+              include: ['aura/ext/mediator', 'aura/ext/widgets' , 'app']
+            });
+
+            // Include Widget
+            _.each(widgets, function(widgetDir) {
+                output.push({
+                  name: 'widgets/' + widgetDir + '/main'
+                });
+            });
+
+            return output;
+          })(),
+           onBuildWrite: function(moduleName, path, contents) {
+             _.each(widgets, function(widgetDir) {
+               if(moduleName === 'widgets/' + widgetDir + '/main') {
+                  contents = contents.replace('widgets/' + widgetDir + '/main', '__widget__$'+widgetDir+'@default');
+               }
+             });
+             return contents;
+           }
         }
       }
     }
-});
-
-  // Load Local Tasks
-  grunt.loadTasks('tasks');
+  });
 
   // Load NPM Tasks
   grunt.loadNpmTasks('grunt-contrib-requirejs');
