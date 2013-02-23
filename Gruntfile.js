@@ -44,32 +44,44 @@ module.exports = function(grunt) {
 
     },
     requirejs: {
-      client: {
+      options: {
+        baseUrl: 'public/js',
+        optimize: 'none',
+        preserveLicenseComments: true,
+
+        paths: {
+          aura: 'components/aura/lib/',
+          underscore: 'components/underscore/underscore',
+          eventemitter: 'components/eventemitter2/lib/eventemitter2',
+          backbone: 'components/backbone/backbone',
+          handlebars: 'components/handlebars/handlebars',
+          text: 'components/requirejs-text/text',
+          jquery: 'components/jquery/jquery'
+        },
+        shim: {
+          backbone: {
+            exports: 'Backbone',
+            deps: ['underscore', 'jquery']
+          },
+          underscore: {
+            exports: '_'
+          },
+          handlebars: {
+            exports: 'Handlebars'
+          }
+        },
+        onBuildWrite: function(moduleName, path, contents) {
+          _.each(widgets, function(widgetDir) {
+            if(moduleName === 'widgets/' + widgetDir + '/main') {
+              contents = contents.replace('widgets/' + widgetDir + '/main', '__widget__$' + widgetDir + '@default');
+            }
+          });
+          return contents;
+        }
+      },
+      perFile: {
         options: {
           dir: 'build/js',
-          baseUrl: 'public/js',
-          optimize: 'none',
-          preserveLicenseComments: true,
-          paths: {
-            aura:           'components/aura/lib/',
-            underscore:     'components/underscore/underscore',
-            eventemitter:   'components/eventemitter2/lib/eventemitter2',
-            backbone:       'components/backbone/backbone',
-            handlebars:     'components/handlebars/handlebars',
-            text:           'components/requirejs-text/text'
-          },
-          shim: {
-            backbone: {
-              exports: 'Backbone',
-              deps: ['underscore', 'jquery']
-            },
-            underscore: {
-              exports: '_'
-            },
-            handlebars: {
-              exports: 'Handlebars'
-            }
-          },
           modules: (function() {
             // Get auraExtensions
             var output = [];
@@ -77,26 +89,37 @@ module.exports = function(grunt) {
             // Include Aura
             output.push({
               name: 'app',
-              include: ['aura/ext/mediator', 'aura/ext/widgets' , 'app']
+              include: ['aura/ext/mediator', 'aura/ext/widgets', 'app', 'text']
             });
 
             // Include Widget
             _.each(widgets, function(widgetDir) {
-                output.push({
-                  name: 'widgets/' + widgetDir + '/main'
-                });
+              output.push({
+                name: 'widgets/' + widgetDir + '/main',
+                exclude: ['app']
+              });
             });
 
             return output;
+          })()
+        }
+      },
+      oneFile: {
+        options: {
+          almond: true,
+          wrap: true,
+          insertRequire: ['app'],
+          out: "build/app.js",
+          baseUrl: 'public/js',
+          include: (function() {
+            // Include Aura
+            var output = ['app', 'aura/ext/mediator', 'aura/ext/widgets', 'text'];
+            // Include Widget
+            _.each(widgets, function(widgetDir) {
+              output.push('widgets/' + widgetDir + '/main');
+            });
+            return output;
           })(),
-           onBuildWrite: function(moduleName, path, contents) {
-             _.each(widgets, function(widgetDir) {
-               if(moduleName === 'widgets/' + widgetDir + '/main') {
-                  contents = contents.replace('widgets/' + widgetDir + '/main', '__widget__$'+widgetDir+'@default');
-               }
-             });
-             return contents;
-           }
         }
       }
     }
